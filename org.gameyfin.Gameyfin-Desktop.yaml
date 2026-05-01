@@ -1,0 +1,185 @@
+app-id: org.gameyfin.Gameyfin-Desktop
+runtime: org.gnome.Platform
+runtime-version: '48'
+sdk: org.gnome.Sdk
+command: gameyfin-desktop
+separate-locales: false
+
+finish-args:
+  # --- Networking & Webview Support ---
+  - --share=network
+  - --share=ipc
+  - --socket=x11
+  - --socket=wayland
+  - --socket=session-bus
+  - --talk-name=org.freedesktop.secrets
+
+  # --- Audio & Hardware ---
+  - --socket=pulseaudio
+  - --device=all
+  - --device=input
+  - --allow=devel
+  - --allow=multiarch
+  - --allow=bluetooth
+  - --allow=per-app-dev-shm
+
+  # --- Filesystem ---
+  - --filesystem=home
+  - --filesystem=xdg-download:create
+  - --filesystem=/run/media
+  - --filesystem=/run/udev:ro
+  - --filesystem=xdg-run/gamescope-0:rw
+  - --filesystem=xdg-config/MangoHud:ro
+  - --filesystem=~/.local/share/umu:rw
+  - --filesystem=xdg-data/umu:rw
+  - --filesystem=~/.steam:rw
+  - --filesystem=~/.local/share/Steam:rw
+  - --filesystem=~/.var/app/com.valvesoftware.Steam:rw
+
+  # --- System Integration ---
+  - --talk-name=org.freedesktop.Flatpak
+  - --talk-name=org.kde.StatusNotifierWatcher
+  - --talk-name=org.freedesktop.Notifications
+  - --talk-name=org.freedesktop.PowerManagement
+  - --talk-name=org.freedesktop.FileManager1
+  - --system-talk-name=org.freedesktop.UDisks2
+  - --system-talk-name=org.freedesktop.UPower
+
+  # Standard Path setup
+  - --env=PATH=/app/bin:/app/utils/bin:/usr/bin:/app/lib/extensions/vulkan/MangoHud/bin:/app/lib/i386-linux-gnu/extensions/vulkan/MangoHud/bin
+  - --env=SteamVirtualGamepadInfo=
+
+add-extensions:
+  org.freedesktop.Platform.VulkanLayer.MangoHud.i386:
+    directory: lib/i386-linux-gnu/extensions/vulkan/MangoHud
+    version: '25.08'
+    add-ld-path: lib
+    no-autodownload: false
+    autodelete: false
+
+  org.freedesktop.Platform.VulkanLayer.MangoHud:
+    directory: lib/extensions/vulkan/MangoHud
+    version: '25.08'
+    add-ld-path: lib
+    no-autodownload: false
+    autodelete: false
+
+  org.freedesktop.Platform.Compat.i386:
+    directory: lib/i386-linux-gnu
+    version: '25.08'
+
+  org.freedesktop.Platform.GL32:
+    directory: lib/i386-linux-gnu/GL
+    version: '1.4'
+    versions: 25.08;1.4
+    subdirectories: true
+    add-ld-path: lib
+
+  com.valvesoftware.Steam.Utility:
+    subdirectories: true
+    directory: utils
+    version: stable
+    add-ld-path: lib
+    merge-dirs: bin
+
+modules:
+  - name: pre-setup
+    buildsystem: simple
+    build-commands:
+      - mkdir -p /app/lib/i386-linux-gnu/GL
+      - mkdir -p /app/lib/python3.13/site-packages
+      - mkdir -p /app/utils
+      - mkdir -p /app/etc
+      - mkdir -p /app/lib/extensions/vulkan/MangoHud
+      - mkdir -p /app/lib/i386-linux-gnu/extensions/vulkan/MangoHud
+
+      # FIX: amdgpu hardware ID silence
+      - mkdir -p /app/lib/i386-linux-gnu/GL/default/share/libdrm
+      - touch /app/lib/i386-linux-gnu/GL/default/share/libdrm/amdgpu.ids
+
+  # --- WebKitGTK is provided by the GNOME runtime ---
+
+  # --- Tools for Winetricks ---
+  - name: 7zip
+    buildsystem: simple
+    subdir: CPP/7zip/Bundles/Alone2
+    build-commands:
+      - make -j $FLATPAK_BUILDER_N_JOBS -f makefile.gcc
+      - install -Dm755 ./_o/7zz /app/bin/7zz
+      - ln -s /app/bin/7zz /app/bin/7za
+    sources:
+      - type: archive
+        url: https://github.com/ip7z/7zip/archive/refs/tags/25.01.tar.gz
+        sha256: 8772e4ef86540c98bf4c23a6d9e13b3a25794d4bb30986ef0b1b9f20075b34c9
+
+  - name: cabextract
+    sources:
+      - type: archive
+        url: https://www.cabextract.org.uk/cabextract-1.11.tar.gz
+        sha256: b5546db1155e4c718ff3d4b278573604f30dd64c3c5bfd4657cd089b823a3ac6
+
+  - name: unrar
+    no-autogen: true
+    make-install-args: [DESTDIR=/app]
+    sources:
+      - type: archive
+        url: https://www.rarlab.com/rar/unrarsrc-7.2.2.tar.gz
+        sha256: 41c00c8755cf5bf6b5d7f0d2d167ee889c2c5352e17e5c9470dbc354af1e71ab
+
+  - name: winetricks
+    buildsystem: simple
+    build-commands:
+      - install -Dm755 src/winetricks /app/bin/winetricks
+    sources:
+      - type: git
+        url: https://github.com/Winetricks/winetricks.git
+        tag: '20260125'
+
+  - name: gamemode
+    buildsystem: meson
+    config-opts: [-Dwith-examples=false, -Dwith-util=false, -Dwith-sd-bus-provider=no-daemon]
+    sources:
+      - type: git
+        url: https://github.com/FeralInteractive/gamemode.git
+        tag: 1.8.2
+
+  - python-dependencies.json
+
+  - name: umu-launcher
+    buildsystem: simple
+    build-commands:
+      - python3 -c 'import sysconfig; print(sysconfig.get_path("purelib", vars={"base":"/app"}))' > site_path.txt
+      - mkdir -p $(cat site_path.txt) && cp -r umu $(cat site_path.txt)/
+      - |
+        cat <<EOF > /app/bin/umu-run
+        #!/usr/bin/python3
+        import sys
+        import re
+        from umu.__main__ import main
+        if __name__ == "__main__":
+            sys.argv[0] = re.sub(r"(-script\.pyw|\.exe)?$", "", sys.argv[0])
+            sys.exit(main())
+        EOF
+      - chmod +x /app/bin/umu-run
+    sources:
+      - type: git
+        url: https://github.com/Open-Wine-Components/umu-launcher.git
+        tag: 1.4.0
+
+  - name: gameyfin-desktop
+    buildsystem: simple
+    build-commands:
+      - mkdir -p /app/share/gameyfin
+      - cp -r gameyfin_frontend /app/share/gameyfin/
+      - cp gameyfin_app.py /app/share/gameyfin/
+      - mkdir -p /app/bin
+      - install -m 755 gameyfin-desktop.sh /app/bin/gameyfin-desktop
+      - mkdir -p /app/share/applications
+      - install -m 644 org.gameyfin.Gameyfin-Desktop.desktop /app/share/applications/
+      - mkdir -p /app/share/metainfo
+      - install -m 644 org.gameyfin.Gameyfin-Desktop.metainfo.xml /app/share/metainfo/
+      - mkdir -p /app/share/icons/hicolor/256x256/apps
+      - install -m 644 gameyfin_frontend/icon.png /app/share/icons/hicolor/256x256/apps/org.gameyfin.Gameyfin-Desktop.png
+    sources:
+      - type: dir
+        path: .
