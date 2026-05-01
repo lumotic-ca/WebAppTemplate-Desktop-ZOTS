@@ -1,7 +1,6 @@
 """
-Gameyfin Desktop — main entry point.
-Uses pywebview (EdgeWebView2 on Windows, WebKitGTK on Linux) for a flicker-free,
-OS-native web rendering experience.
+WebAppCore Desktop — main entry point (Windows only).
+Uses pywebview (Edge WebView2) for OS-native rendering.
 """
 
 import os
@@ -10,31 +9,30 @@ import sys
 import webview
 from dotenv import load_dotenv
 
-from gameyfin_frontend.settings import settings_manager
-from gameyfin_frontend.utils import resource_path, normalize_gameyfin_url
-from gameyfin_frontend.umu_database import UmuDatabase
-from gameyfin_frontend.download_engine import DownloadEngine
-from gameyfin_frontend.bridge import GFBridge
-from gameyfin_frontend.tray import GameyfinTray
+from webappcore.bridge import AppBridge
+from webappcore.download_engine import DownloadEngine
+from webappcore.settings import settings_manager
+from webappcore.tray import TrayController
+from webappcore.utils import normalize_app_url, resource_path
 
 
 load_dotenv()
 
-# pywebview global settings
+# CORE: pywebview global settings
 webview.settings["ALLOW_DOWNLOADS"] = True
 webview.settings["OPEN_EXTERNAL_LINKS_IN_BROWSER"] = False
-# Homelab HTTPS with private CAs / self-signed certs
+# CORE: Useful for homelab HTTPS with private CAs / self-signed certs.
 webview.settings["IGNORE_SSL_ERRORS"] = True
 
-# JS injected into the Gameyfin web UI after each page load.
+# CORE: JS injected into the remote web UI after each page load.
 # Intercepts download navigations and triggers native browser downloads
 # via hidden iframe (full auth, no CORS issues).
 DOWNLOAD_INTERCEPT_JS = """
 (function() {
-    if (window._gfInterceptInstalled) return;
-    window._gfInterceptInstalled = true;
+    if (window._wacInterceptInstalled) return;
+    window._wacInterceptInstalled = true;
 
-    function _gfAbsUrl(url) {
+    function _wacAbsUrl(url) {
         if (!url) return '';
         try {
             if (url.startsWith('/')) return window.location.origin + url;
@@ -42,18 +40,15 @@ DOWNLOAD_INTERCEPT_JS = """
         return url;
     }
 
-    function _gfIsDownloadUrl(url) {
+    function _wacIsDownloadUrl(url) {
         return !!url && String(url).indexOf('/download/') !== -1;
     }
 
-    function _gfStartDownload(url) {
-        var absUrl = _gfAbsUrl(url);
+    function _wacStartDownload(url) {
+        var absUrl = _wacAbsUrl(url);
         var api = window.pywebview && window.pywebview.api;
         if (!api) return;
 
-        // Register the download in our tracker, then trigger native download.
-        // The hidden iframe uses the browser's own session (cookies, CSRF, etc.)
-        // so there are no CORS or auth issues.
         api.register_download(absUrl);
 
         var iframe = document.createElement('iframe');
@@ -64,17 +59,15 @@ DOWNLOAD_INTERCEPT_JS = """
             try { document.body.removeChild(iframe); } catch(_) {}
         }, 120000);
 
-        // Brief delay so the browser starts the download before we navigate away.
         setTimeout(function() {
             if (api.navigate_main_to_panel) api.navigate_main_to_panel('downloads');
         }, 2000);
     }
 
-    // Top tabs overlay in the main Gameyfin UI.
-    (function _gfInstallTabs() {
-        if (document.getElementById('gf-desktop-tabs')) return;
+    (function _wacInstallTabs() {
+        if (document.getElementById('wac-desktop-tabs')) return;
         var bar = document.createElement('div');
-        bar.id = 'gf-desktop-tabs';
+        bar.id = 'wac-desktop-tabs';
         bar.style.position = 'fixed';
         bar.style.top = '0';
         bar.style.left = '0';
@@ -111,9 +104,9 @@ DOWNLOAD_INTERCEPT_JS = """
             return b;
         }
 
-        bar.appendChild(mkBtn('Gameyfin', function() {
-            if (window.pywebview && window.pywebview.api && window.pywebview.api.navigate_main_to_gameyfin) {
-                window.pywebview.api.navigate_main_to_gameyfin();
+        bar.appendChild(mkBtn('Remote App', function() {
+            if (window.pywebview && window.pywebview.api && window.pywebview.api.navigate_main_to_remote) {
+                window.pywebview.api.navigate_main_to_remote();
             }
         }));
         bar.appendChild(mkBtn('Downloads', function() {
@@ -133,11 +126,10 @@ DOWNLOAD_INTERCEPT_JS = """
         document.documentElement.appendChild(style);
     })();
 
-    // Intercept window.open (Gameyfin uses window.open('/download/...', '_top'))
     var _origOpen = window.open;
     window.open = function(url, target, features) {
-        if (_gfIsDownloadUrl(url)) {
-            _gfStartDownload(url);
+        if (_wacIsDownloadUrl(url)) {
+            _wacStartDownload(url);
             return null;
         }
         return _origOpen.call(window, url, target, features);
@@ -147,17 +139,17 @@ DOWNLOAD_INTERCEPT_JS = """
         var link = e.target.closest('a[href]');
         if (!link) return;
         var href = link.getAttribute('href') || '';
-        if (_gfIsDownloadUrl(href)) {
+        if (_wacIsDownloadUrl(href)) {
             e.preventDefault();
             e.stopPropagation();
-            _gfStartDownload(href);
+            _wacStartDownload(href);
         }
     }, true);
 
     try {
         var _origAssign = window.location.assign.bind(window.location);
         window.location.assign = function(url) {
-            if (_gfIsDownloadUrl(url)) { _gfStartDownload(url); return; }
+            if (_wacIsDownloadUrl(url)) { _wacStartDownload(url); return; }
             return _origAssign(url);
         };
     } catch (_) {}
@@ -165,14 +157,14 @@ DOWNLOAD_INTERCEPT_JS = """
     try {
         var _origReplace = window.location.replace.bind(window.location);
         window.location.replace = function(url) {
-            if (_gfIsDownloadUrl(url)) { _gfStartDownload(url); return; }
+            if (_wacIsDownloadUrl(url)) { _wacStartDownload(url); return; }
             return _origReplace(url);
         };
     } catch (_) {}
 
     try {
-        if (_gfIsDownloadUrl(window.location.pathname || window.location.href)) {
-            _gfStartDownload(window.location.href);
+        if (_wacIsDownloadUrl(window.location.pathname || window.location.href)) {
+            _wacStartDownload(window.location.href);
         }
     } catch (_) {}
 
@@ -181,10 +173,10 @@ DOWNLOAD_INTERCEPT_JS = """
             var form = e.target;
             if (!form) return;
             var action = form.getAttribute('action') || '';
-            if (_gfIsDownloadUrl(action)) {
+            if (_wacIsDownloadUrl(action)) {
                 e.preventDefault();
                 e.stopPropagation();
-                _gfStartDownload(action);
+                _wacStartDownload(action);
             }
         } catch (_) {}
     }, true);
@@ -195,29 +187,28 @@ DOWNLOAD_INTERCEPT_JS = """
 """
 
 
-# When False, the main window is showing local setup HTML — do not inject Gameyfin download hooks.
+# CORE: When False, the main window is showing local setup HTML — do not inject download hooks.
 _inject_download_hooks = False
 
 
-def set_gameyfin_mode(active: bool):
-    """True when the main window is (or will be) on the remote Gameyfin app."""
+def set_remote_content_mode(active: bool):
+    """True when the main window is (or will be) on the remote web app."""
     global _inject_download_hooks
     _inject_download_hooks = bool(active)
 
 
 def on_main_loaded():
-    """Inject the download intercept script after each remote Gameyfin page load."""
+    """Inject the download intercept script after each remote page load."""
     if main_window and _inject_download_hooks:
         main_window.evaluate_js(DOWNLOAD_INTERCEPT_JS)
 
 
 def open_server_setup_page():
     """Tray / bridge: load the local server URL form in the main window."""
-    set_gameyfin_mode(False)
+    set_remote_content_mode(False)
     if main_window:
-        p = resource_path(os.path.join("gameyfin_frontend", "panel", "setup.html"))
-        su = f"file:///{p}" if sys.platform == "win32" else f"file://{p}"
-        main_window.load_url(su)
+        p = resource_path(os.path.join("webappcore", "panel", "setup.html"))
+        main_window.load_url(f"file:///{p}")
 
 
 def quit_app():
@@ -238,34 +229,37 @@ panel_window = None
 def main():
     global main_window, panel_window
 
-    url_raw = settings_manager.get("GF_URL")
-    gameyfin_url = normalize_gameyfin_url(url_raw) or url_raw or "http://localhost:8080"
+    if sys.platform != "win32":
+        print("WebAppCore is Windows-only.")
+        return
 
-    setup_path = resource_path(os.path.join("gameyfin_frontend", "panel", "setup.html"))
-    setup_url = f"file:///{setup_path}" if sys.platform == "win32" else f"file://{setup_path}"
+    url_raw = settings_manager.get("WEBAPPCORE_URL")
+    remote_url = normalize_app_url(url_raw) or url_raw or "http://localhost:8080"
 
-    configured = int(settings_manager.get("GF_SERVER_CONFIGURED", 0)) == 1
+    setup_path = resource_path(os.path.join("webappcore", "panel", "setup.html"))
+    setup_url = f"file:///{setup_path}"
+
+    configured = int(settings_manager.get("WEBAPPCORE_SERVER_CONFIGURED", 0)) == 1
     if configured:
-        set_gameyfin_mode(True)
-        initial_main_url = gameyfin_url
+        set_remote_content_mode(True)
+        initial_main_url = remote_url
     else:
-        set_gameyfin_mode(False)
+        set_remote_content_mode(False)
         initial_main_url = setup_url
 
-    width = settings_manager.get("GF_WINDOW_WIDTH") or 1420
-    height = settings_manager.get("GF_WINDOW_HEIGHT") or 940
+    width = settings_manager.get("WEBAPPCORE_WINDOW_WIDTH") or 1420
+    height = settings_manager.get("WEBAPPCORE_WINDOW_HEIGHT") or 940
 
-    panel_html = resource_path(os.path.join("gameyfin_frontend", "panel", "index.html"))
-    panel_url = f"file:///{panel_html}" if sys.platform == "win32" else f"file://{panel_html}"
+    panel_html = resource_path(os.path.join("webappcore", "panel", "index.html"))
+    panel_url = f"file:///{panel_html}"
 
     data_dir = settings_manager.settings_dir
-    umu_db = UmuDatabase()
     download_engine = DownloadEngine(data_dir)
 
-    bridge = GFBridge(None, None, download_engine, umu_db, on_gameyfin_navigation=set_gameyfin_mode)
+    bridge = AppBridge(None, None, download_engine, on_remote_navigation=set_remote_content_mode)
 
     main_window = webview.create_window(
-        "Gameyfin",
+        "WebAppCore",
         url=initial_main_url,
         width=width,
         height=height,
@@ -276,7 +270,7 @@ def main():
     bridge._main_window = main_window
 
     panel_window = webview.create_window(
-        "Gameyfin - Panel",
+        "WebAppCore - Panel",
         url=panel_url,
         width=700,
         height=600,
@@ -288,10 +282,9 @@ def main():
 
     main_window.events.loaded += on_main_loaded
 
-    tray = GameyfinTray(main_window, panel_window, quit_app, on_change_server=open_server_setup_page)
+    tray = TrayController(main_window, panel_window, quit_app, on_change_server=open_server_setup_page)
     tray.start()
 
-    # Run the pywebview event loop (blocks until all windows are closed)
     webview.start(
         private_mode=False,
         storage_path=data_dir,

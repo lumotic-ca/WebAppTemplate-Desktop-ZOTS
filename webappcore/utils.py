@@ -1,0 +1,66 @@
+import os
+import sys
+from pathlib import Path
+from typing import Optional
+from urllib.parse import urlparse, urlunparse
+
+
+def normalize_app_url(url_str: str) -> Optional[str]:
+    """
+    Return a usable absolute URL, or None if invalid.
+    Adds http:// when no scheme is provided.
+    """
+    s = (url_str or "").strip()
+    if not s:
+        return None
+
+    if "://" not in s:
+        s = "http://" + s
+
+    parsed = urlparse(s)
+    if not parsed.scheme or not parsed.hostname:
+        return None
+
+    return urlunparse(parsed)
+
+
+def resource_path(relative_path: str) -> str:
+    """Get absolute path to resource, works for dev and for PyInstaller."""
+    if hasattr(sys, "_MEIPASS"):
+        return os.path.join(sys._MEIPASS, relative_path)
+
+    base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base_path, relative_path)
+
+
+def get_app_icon_path(custom_path: str = None) -> str:
+    """Returns the appropriate icon path."""
+    if custom_path and os.path.exists(custom_path):
+        return custom_path
+    return resource_path(os.path.join("webappcore", "icon.png"))
+
+
+def format_size(nbytes: int) -> str:
+    if nbytes >= 1024**3:
+        return f"{nbytes / 1024**3:.2f} GB"
+    if nbytes >= 1024**2:
+        return f"{nbytes / 1024**2:.2f} MB"
+    if nbytes >= 1024:
+        return f"{nbytes / 1024:.2f} KB"
+    return f"{nbytes} B"
+
+
+def open_path(path: str):
+    """Open a file or folder with the system's default handler."""
+    os.startfile(path)
+
+
+def get_default_download_dir() -> str:
+    """
+    Return the OS default Downloads directory.
+
+    Notes:
+    - Windows: prefer %USERPROFILE%\\Downloads (WebView2 default).
+    """
+    home = os.environ.get("USERPROFILE") or str(Path.home())
+    return os.path.join(home, "Downloads")

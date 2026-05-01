@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gameyfin — Connect to server</title>
+  <title>WebAppCore — Connect to server</title>
   <link rel="stylesheet" href="style.css">
   <style>
     .setup-wrap { max-width: 520px; margin: 0 auto; padding: 32px 24px 48px; }
@@ -17,13 +17,13 @@
 </head>
 <body>
 <main class="setup-wrap">
-  <h1>Connect to your Gameyfin server</h1>
-  <p class="lead">Enter the URL where Gameyfin is running (same address you use in a browser). You can change this anytime from the tray menu or the Downloads / Settings panel.</p>
+  <h1>Connect to your server</h1>
+  <p class="lead">Enter the URL where your web app is running. You can change this anytime from the tray menu or the Downloads / Settings panel.</p>
 
   <form id="setup-form" action="#" method="get">
     <div class="form-group">
       <label class="form-label" for="server-url">Server URL</label>
-      <input class="form-input" id="server-url" name="server-url" type="text" autocomplete="url" spellcheck="false" required placeholder="https://gameyfin.example.com or http://192.168.1.10:8080" aria-describedby="url-hint">
+      <input class="form-input" id="server-url" name="server-url" type="text" autocomplete="url" spellcheck="false" required placeholder="https://app.example.com or http://192.168.1.10:8080" aria-describedby="url-hint">
       <p id="url-hint" class="hint">Include <kbd>http://</kbd> or <kbd>https://</kbd>. If you omit the scheme, <kbd>http://</kbd> is added.</p>
     </div>
     <div class="setup-actions">

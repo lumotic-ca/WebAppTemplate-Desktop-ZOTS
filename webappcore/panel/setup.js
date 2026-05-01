@@ -19,7 +19,7 @@ async function init() {
     var raw = await a.get_settings();
     var s = JSON.parse(raw);
     var input = document.getElementById("server-url");
-    if (s.GF_URL) input.value = s.GF_URL;
+    if (s.WEBAPPCORE_URL) input.value = s.WEBAPPCORE_URL;
     input.focus();
     input.select();
   } catch (e) {

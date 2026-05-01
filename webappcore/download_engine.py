@@ -1,5 +1,5 @@
 """
-Download record manager with filesystem watcher for Gameyfin Desktop.
+Download record manager with filesystem watcher.
 
 The browser handles the actual HTTP download (via hidden iframe with full
 auth). This module manages download records and polls the download folder
@@ -163,7 +163,11 @@ class DownloadEngine:
                 continue
 
             # Prefer partial download files first (Edge uses .crdownload).
-            partials = [f for f in current_files if f.endswith(".crdownload") or f.endswith(".partial") or f.endswith(".tmp")]
+            partials = [
+                f
+                for f in current_files
+                if f.endswith(".crdownload") or f.endswith(".partial") or f.endswith(".tmp")
+            ]
             finals = [f for f in current_files if f not in partials]
 
             # 1) Lock onto the first new partial file and track its size growth.

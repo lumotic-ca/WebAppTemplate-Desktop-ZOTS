@@ -8,11 +8,15 @@ from typing import Callable, Optional
 class UnzipWorker:
     """Runs zip extraction on a background thread."""
 
-    def __init__(self, zip_path: str, target_dir: str,
-                 on_progress: Optional[Callable[[int], None]] = None,
-                 on_current_file: Optional[Callable[[str], None]] = None,
-                 on_finished: Optional[Callable[[], None]] = None,
-                 on_error: Optional[Callable[[str], None]] = None):
+    def __init__(
+        self,
+        zip_path: str,
+        target_dir: str,
+        on_progress: Optional[Callable[[int], None]] = None,
+        on_current_file: Optional[Callable[[str], None]] = None,
+        on_finished: Optional[Callable[[], None]] = None,
+        on_error: Optional[Callable[[str], None]] = None,
+    ):
         self.zip_path = zip_path
         self.target_dir = target_dir
         self._on_progress = on_progress
@@ -28,7 +32,7 @@ class UnzipWorker:
 
     def _run(self):
         try:
-            with zipfile.ZipFile(self.zip_path, 'r') as zip_ref:
+            with zipfile.ZipFile(self.zip_path, "r") as zip_ref:
                 file_list = zip_ref.infolist()
                 total_files = len(file_list)
 
@@ -68,8 +72,7 @@ class UnzipWorker:
 class ProcessMonitorWorker:
     """Monitors a process by PID on a background thread."""
 
-    def __init__(self, pid: int,
-                 on_finished: Optional[Callable[[], None]] = None):
+    def __init__(self, pid: int, on_finished: Optional[Callable[[], None]] = None):
         self.pid = pid
         self._on_finished = on_finished
         self._running = True
