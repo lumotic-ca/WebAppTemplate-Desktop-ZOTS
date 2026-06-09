@@ -6,7 +6,7 @@ mod window;
 
 use state::AppState;
 use tauri::Manager;
-use window::{attach_window_listeners, ensure_main_window, open_erp_window, show_setup_window};
+use window::{ensure_main_window, open_erp_window, show_setup_window};
 
 fn prevent_default_plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
     use tauri_plugin_prevent_default::Flags;
@@ -45,8 +45,6 @@ pub fn run() {
                 show_setup_window(app.handle())?;
             }
 
-            attach_window_listeners(app.handle())?;
-
             if let Some(url) = saved_url {
                 let handle = app.handle().clone();
                 let _ = app.handle().run_on_main_thread(move || {
@@ -62,9 +60,6 @@ pub fn run() {
             commands::get_saved_url,
             commands::save_server_url,
             commands::reset_server,
-            commands::refresh_erp,
-            commands::open_settings,
-            commands::return_to_erp,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

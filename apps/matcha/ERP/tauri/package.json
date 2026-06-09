@@ -1,6 +1,6 @@
 {
   "name": "matcha-erp-tauri",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Minimal Tauri desktop wrapper for self-hosted ERPNext",
   "type": "module",
   "scripts": {

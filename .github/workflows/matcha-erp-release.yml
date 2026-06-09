@@ -6,7 +6,7 @@ on:
       tag:
         description: 'Release tag (e.g. matcha-erp-v0.1.0)'
         required: true
-        default: matcha-erp-v0.1.0
+        default: matcha-erp-v0.1.2
   push:
     tags:
       - matcha-erp-v*
@@ -47,6 +47,8 @@ jobs:
             **Install:** run the `.exe` installer (NSIS). WebView2 Runtime is required on Windows 10+.
 
             **First launch:** enter your ERPNext server URL once; it is saved for future sessions.
+
+            **Zoom:** use `Ctrl + +/-`, `Ctrl + 0` (reset), or `Ctrl + mousewheel` while viewing ERPNext.
           releaseDraft: false
           prerelease: false
           projectPath: apps/matcha/ERP/tauri

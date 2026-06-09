@@ -1,6 +1,6 @@
 [package]
 name = "matcha_erp"
-version = "0.1.0"
+version = "0.1.2"
 description = "Minimal desktop wrapper for self-hosted ERPNext"
 authors = ["lumotic"]
 edition = "2021"

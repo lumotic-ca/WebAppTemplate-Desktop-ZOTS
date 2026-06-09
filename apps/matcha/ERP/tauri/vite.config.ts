@@ -19,12 +19,5 @@ export default defineConfig({
     target: 'es2021',
     minify: !process.env.TAURI_DEBUG ? 'esbuild' : false,
     sourcemap: !!process.env.TAURI_DEBUG,
-    rollupOptions: {
-      input: {
-        main: 'index.html',
-        settings: 'settings.html',
-        toolbar: 'toolbar.html',
-      },
-    },
   },
 });
