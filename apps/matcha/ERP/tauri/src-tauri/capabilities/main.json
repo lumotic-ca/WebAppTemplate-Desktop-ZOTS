@@ -1,8 +1,8 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "main-capability",
-  "description": "Minimal permissions for the Matcha ERP shell",
-  "windows": ["main"],
+  "description": "Permissions for the Matcha ERP shell windows",
+  "windows": ["main", "toolbar"],
   "remote": {
     "urls": ["http://localhost:1421/**"]
   },
@@ -13,6 +13,10 @@
     "core:window:allow-close",
     "core:window:allow-set-focus",
     "core:window:allow-set-fullscreen",
+    "core:window:allow-set-size",
+    "core:window:allow-set-position",
+    "core:window:allow-inner-size",
+    "core:window:allow-outer-position",
     "core:webview:allow-webview-position",
     "core:webview:allow-webview-size",
     "opener:default",

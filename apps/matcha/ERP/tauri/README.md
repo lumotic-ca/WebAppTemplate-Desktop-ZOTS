@@ -6,9 +6,11 @@ Minimal, production-ready **Tauri v2** desktop wrapper for self-hosted [ERPNext]
 
 - Single native window that loads your ERPNext URL directly
 - First-run setup: enter server URL once, persisted across reboots
+- Toolbar with **Refresh** and **Settings** while connected to ERPNext
+- Settings page to change server URL or disconnect
 - External links open in the system browser (same-origin navigation stays in-app)
 - Window size/position restored via `tauri-plugin-window-state`
-- Production builds disable context menu and devtools shortcuts
+- Production builds block devtools shortcuts; right-click paste is allowed
 - Strict CSP for the local setup/splash UI; minimal Tauri IPC surface
 
 ## Quick start
@@ -37,15 +39,15 @@ Artifacts: `src-tauri/target/release/bundle/`
 
 Server URL is stored at `{app_data_dir}/erp_server_url.txt`.
 
-## Reset server URL
+## Settings
 
-From devtools console (debug builds only):
+Open **Settings** from the toolbar (gear icon) while connected, or use the setup screen on first launch.
 
-```js
-await window.__TAURI__.core.invoke('reset_server')
-```
+From Settings you can update the server URL, return to ERPNext, or disconnect and clear the saved URL.
 
-Or delete the app data file and relaunch.
+## App icon
+
+Place your logo source in `branding/` and regenerate icons — see [branding/README.md](branding/README.md).
 
 ## Platform notes
 

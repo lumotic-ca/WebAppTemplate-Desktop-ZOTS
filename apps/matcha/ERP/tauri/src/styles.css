@@ -94,9 +94,34 @@ button {
   cursor: pointer;
 }
 
+button.secondary {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--text) 18%, transparent);
+}
+
+button.danger {
+  background: #b91c1c;
+}
+
 button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.button-row {
+  display: grid;
+  gap: 8px;
+}
+
+.danger-zone {
+  margin-top: 8px;
+  text-align: left;
+}
+
+.danger-zone h2 {
+  margin: 0;
+  font-size: 1rem;
 }
 
 .error {

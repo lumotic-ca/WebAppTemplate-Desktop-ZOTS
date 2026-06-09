@@ -1,4 +1,46 @@
+use tauri::{AppHandle, Manager};
+use tauri_plugin_opener::OpenerExt;
 use url::Url;
+
+pub fn handle_navigation(app: &AppHandle, target: &Url) -> bool {
+    if is_local_shell_url(target) {
+        return true;
+    }
+
+    let Some(state) = app.try_state::<crate::state::AppState>() else {
+        return false;
+    };
+
+    let Ok(Some(base)) = state.load_server_url() else {
+        return false;
+    };
+
+    if is_allowed_navigation(&base, target) {
+        return true;
+    }
+
+    if is_external_navigation(&base, target) {
+        let _ = app
+            .opener()
+            .open_url(target.as_str(), None::<&str>);
+    }
+
+    false
+}
+
+pub fn is_local_shell_url(url: &Url) -> bool {
+    match url.scheme() {
+        "tauri" | "asset" | "file" => return true,
+        "http" | "https" => {}
+        _ => return false,
+    }
+
+    match url.host_str() {
+        Some("localhost") | Some("127.0.0.1") | Some("tauri.localhost") => true,
+        Some(host) if host.ends_with(".localhost") => true,
+        _ => false,
+    }
+}
 
 pub fn normalize_server_url(input: &str) -> Result<String, String> {
     let trimmed = input.trim();
