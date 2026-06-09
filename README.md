@@ -1,38 +1,101 @@
-# WebAppCore Desktop Template
+# WebAppTemplate
 
-WebAppCore is a **Windows-only** template for building “desktop wrappers” around existing web apps using **Python + pywebview**. It gives you a reusable shell (tray, settings, local panel UI, download tracking, zip/extract/install helpers) so you can focus on integrating your next web app.
+A starter template for building **web applications with Flutter**.
 
-## Core features (template-ready)
+This repository is being rebuilt around Flutter as the primary framework. The previous Python + pywebview desktop shell has been removed in favor of a cross-platform web-first approach using Flutter's web target.
 
-- **Desktop shell**: native window via Edge WebView2, plus a tray icon to show/hide/quit.
-- **Remote app wrapper**: loads a configurable remote URL inside the main window.
-- **Local control panel**: a separate local UI window for settings and download management.
-- **Download manager**: tracks browser-initiated downloads and shows progress/history in the panel.
-- **ZIP extraction + installer launcher**: unzip downloaded archives and launch a selected `.exe` (Windows).
+## Goals
 
-## Configuration
+- **Single codebase** for web (and optionally desktop/mobile) using Flutter and Dart
+- **Modern UI** with Material 3, responsive layouts, and accessible components
+- **Production-ready patterns** for routing, state management, API integration, and deployment
+- **Reusable template** that can be forked and customized for new web app projects
 
-Most settings are editable inside the local panel. You can also set defaults via environment variables:
+## Planned stack
 
-| Environment Variable | Description |
+| Layer | Technology |
 |---|---|
-| `WEBAPPCORE_URL` | **(Required)** Remote web app URL to load, e.g. `http://localhost:8080`. |
-| `WEBAPPCORE_START_MINIMIZED` | Set to `1` to start minimized to the tray. |
-| `WEBAPPCORE_ICON_PATH` | Absolute path to a custom tray icon. |
-| `WEBAPPCORE_WINDOW_WIDTH` | Main window width. |
-| `WEBAPPCORE_WINDOW_HEIGHT` | Main window height. |
-| `WEBAPPCORE_DEFAULT_DOWNLOAD_DIR` | Default directory for downloaded files. |
-| `WEBAPPCORE_DEFAULT_UNZIP_DIR` | Default base directory for extracting ZIP archives. |
-| `WEBAPPCORE_PROMPT_UNZIP_DIR` | Set to `1` to always prompt for an extraction path. |
+| Framework | [Flutter](https://flutter.dev) (web target) |
+| Language | Dart |
+| UI | Material 3 / Cupertino (platform-adaptive) |
+| Routing | `go_router` |
+| State | TBD (e.g. Riverpod, Bloc, or Provider) |
+| HTTP | `http` or `dio` |
+| Build & deploy | `flutter build web` → static hosting (GitHub Pages, Firebase, Netlify, etc.) |
 
-## Run from source (Windows)
+## Prerequisites
 
-```powershell
-py -m pip install -r requirements.txt
-py webappcore_app.py
+- [Flutter SDK](https://docs.flutter.dev/get-started/install) (stable channel, web support enabled)
+- A code editor ([VS Code](https://code.visualstudio.com/) or [Android Studio](https://developer.android.com/studio))
+- Chrome (or another supported browser) for local web development
+
+Verify your setup:
+
+```bash
+flutter doctor
+flutter config --enable-web
 ```
 
-## Customize in your fork (high-signal knobs)
+## Getting started
 
-- **Download URL detection**: the current injected JS looks for URLs containing `/download/`. Change this to match your target web app.
-- **TLS/SSL behavior**: `pywebview` is currently configured to ignore SSL errors for self-hosted environments. Consider gating that behind an env var for production use.
+The Flutter project scaffold has not been generated yet. Once it is in place, the typical workflow will be:
+
+```bash
+# Install dependencies
+flutter pub get
+
+# Run in Chrome (hot reload enabled)
+flutter run -d chrome
+
+# Build for production
+flutter build web --release
+```
+
+Output will land in `build/web/` and can be deployed to any static file host.
+
+## Project structure (planned)
+
+```
+lib/
+  main.dart              # App entry point
+  app.dart               # Root widget, theme, router
+  core/                  # Shared utilities, constants, theme
+  features/              # Feature modules (screens, widgets, logic)
+  services/              # API clients, persistence, platform services
+web/
+  index.html             # Web entry HTML
+  manifest.json          # PWA manifest
+  icons/                 # App icons
+test/                    # Unit and widget tests
+integration_test/        # End-to-end tests
+```
+
+## Development workflow
+
+1. **Fork** this repository for your app
+2. **Scaffold** the Flutter project (or pull in the template once added)
+3. **Develop** features under `lib/features/`
+4. **Test** with `flutter test` and browser manual QA
+5. **Build** with `flutter build web --release`
+6. **Deploy** the `build/web/` directory to your hosting provider
+
+## Deployment options
+
+Flutter web builds to static assets. Common hosting targets:
+
+- **GitHub Pages** — push `build/web` to a `gh-pages` branch or use Actions
+- **Firebase Hosting** — `firebase deploy` after `flutter build web`
+- **Netlify / Vercel** — point the publish directory at `build/web`
+- **Self-hosted** — serve `build/web` behind nginx, Caddy, or any static file server
+
+## What changed
+
+This repo previously shipped a **Windows-only Python desktop wrapper** (pywebview + Edge WebView2) with a local control panel, download manager, and tray integration. That approach has been retired. The new direction is **Flutter web apps** that run in the browser and can optionally be compiled for desktop and mobile from the same codebase.
+
+## License
+
+This project is licensed under the [GNU General Public License v3.0](LICENSE).
+
+## Status
+
+**In progress** — documentation and project direction are set. Awaiting further instructions before scaffolding the Flutter application.

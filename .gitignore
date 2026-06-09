@@ -1,8 +1,37 @@
-.idea
-.venv
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+coverage/
+
+# IDE
+.idea/
+*.iml
+.vscode/*
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Environment & secrets
 .env
-__pycache__
-webappcore/__pycache__
-/build.log
-/resize_screenshots.py
-/repo/
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Generated
+*.g.dart
+*.freezed.dart
+*.mocks.dart
+
+# Web
+**/doc/api/
+
+# Symbolication / obfuscation
+app.*.symbols
+app.*.map.json
