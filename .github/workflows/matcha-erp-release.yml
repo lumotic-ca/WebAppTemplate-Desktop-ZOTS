@@ -32,6 +32,8 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
+      - run: npm ci
+
       - name: Build and publish Windows release
         uses: tauri-apps/tauri-action@v0
         env:
