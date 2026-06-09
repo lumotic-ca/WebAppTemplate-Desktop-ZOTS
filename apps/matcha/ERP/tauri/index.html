@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Matcha ERP</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <main id="app" class="shell">
+      <section id="splash" class="panel" hidden>
+        <div class="spinner" aria-hidden="true"></div>
+        <h1>Matcha ERP</h1>
+        <p id="splash-message">Connecting to your server…</p>
+      </section>
+
+      <section id="setup" class="panel" hidden>
+        <h1>Connect to ERPNext</h1>
+        <p class="lead">
+          Enter the URL of your self-hosted ERPNext instance. It will open here on
+          every launch.
+        </p>
+        <form id="setup-form">
+          <label for="server-url">Server URL</label>
+          <input
+            id="server-url"
+            name="server-url"
+            type="url"
+            placeholder="https://erp.company.com"
+            autocomplete="url"
+            required
+          />
+          <p class="hint">Use https:// for production instances when possible.</p>
+          <p id="setup-error" class="error" role="alert" hidden></p>
+          <button type="submit" id="connect-btn">Connect</button>
+        </form>
+      </section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

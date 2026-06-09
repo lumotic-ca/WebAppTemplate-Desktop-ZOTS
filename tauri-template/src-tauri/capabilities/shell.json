@@ -1,0 +1,18 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "shell",
+  "description": "Main shell window for local UI",
+  "windows": ["main"],
+  "remote": {
+    "urls": ["http://localhost:1420/**"]
+  },
+  "permissions": [
+    "core:default",
+    "core:webview:allow-create-webview-window",
+    "core:webview:allow-webview-close",
+    "core:window:allow-close",
+    "core:window:allow-set-focus",
+    "core:event:allow-emit",
+    "core:event:allow-listen"
+  ]
+}

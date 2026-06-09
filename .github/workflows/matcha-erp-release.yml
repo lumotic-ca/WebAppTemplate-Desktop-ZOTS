@@ -1,0 +1,51 @@
+name: Matcha ERP Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. matcha-erp-v0.1.0)'
+        required: true
+        default: matcha-erp-v0.1.0
+  push:
+    tags:
+      - matcha-erp-v*
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    working-directory: apps/matcha/ERP/tauri
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: apps/matcha/ERP/tauri/package-lock.json
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Build and publish Windows release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+          releaseName: Matcha ERP ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+          releaseBody: |
+            Windows desktop wrapper for self-hosted ERPNext instances.
+
+            **Install:** run the `.exe` installer (NSIS). WebView2 Runtime is required on Windows 10+.
+
+            **First launch:** enter your ERPNext server URL once; it is saved for future sessions.
+          releaseDraft: false
+          prerelease: false
+          projectPath: apps/matcha/ERP/tauri
+          args: --target x86_64-pc-windows-msvc

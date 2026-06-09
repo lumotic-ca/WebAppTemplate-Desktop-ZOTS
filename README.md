@@ -9,7 +9,7 @@ This repository contains multiple template implementations. Pick the stack that 
 | Template | Stack | Status |
 |---|---|---|
 | [flutter-template/](flutter-template/) | Flutter + native WebView | Ready |
-| [tauri-template/](tauri-template/) | Tauri | Awaiting setup |
+| [tauri-template/](tauri-template/) | Tauri + Svelte shell | Ready |
 
 ### flutter-template
 
@@ -31,7 +31,29 @@ Documentation:
 
 ### tauri-template
 
-Reserved for a Tauri-based web app wrapper template. Not yet implemented.
+Desktop-only wrapper using Tauri for the shell and native WebViews, with a Svelte connection hub and a separate wrapped window for the remote web app.
+
+**Targets:** Windows, macOS, Linux
+
+```bash
+cd tauri-template
+npm install
+npm run tauri dev
+```
+
+Documentation:
+
+- [tauri-template/README.md](tauri-template/README.md)
+- [tauri-template/docs/ARCHITECTURE.md](tauri-template/docs/ARCHITECTURE.md)
+- [tauri-template/docs/FORKING.md](tauri-template/docs/FORKING.md)
+
+## Apps
+
+Product-specific wrappers built from the templates above.
+
+| App | Description |
+|---|---|
+| [apps/matcha/ERP/](apps/matcha/ERP/) | **Matcha ERP** — wrappers for self-hosted [ERPNext](https://erpnext.com/) instances (Flutter + Tauri) |
 
 ## License
 
